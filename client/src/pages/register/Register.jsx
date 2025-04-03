@@ -1,5 +1,5 @@
 import logo from "../../assets/logo.png";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import {
   validateEmail,
@@ -8,21 +8,46 @@ import {
   validateUsername,
 } from "../../utils/formValidation";
 import { useState } from "react";
+import MetaArgs from "../../components/MetaArgs";
+import { registerUser } from "../../api/auth";
+import { toast } from "sonner";
+import { useAuth} from "../../store";
+import handleError from "../../utils/handleError";
 
 export default function Register() {
-  const [RevealPassword, setRevealPassword] = useState(false)
+  const [RevealPassword, setRevealPassword] = useState(false);
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm();
-  const togglePassword=() => {
-    setRevealPassword((prev)=> !prev)
-  }
+  const { setAccessToken } = useAuth();
+  const navigate = useNavigate();
+
+  const togglePassword = () => {
+    setRevealPassword((prev) => !prev);
+  };
+
+  const onFormSubmit = async (data) => {
+    try {
+      const res = await registerUser(data);
+    
+      if (res.status === 201) {
+        toast.success(res.data.message);
+        setAccessToken(res.data.accessToken);
+        navigate("/");
+      }
+    } catch (error) {
+      handleError(error);
+    }
+  };
 
   return (
     <>
-      {" "}
+      <MetaArgs
+        title="Sign up to Instashots"
+        content="Get access to InstaShots"
+      />{" "}
       <div className="w-[90vw] md:w-[500px] border rounded-md border-[#A1A1A1] py-[40px] px-[28px]">
         <div className="flex justify-center">
           <Link to="/">
@@ -31,7 +56,7 @@ export default function Register() {
         </div>
         <form
           className="md:max-w-[400px] mx-auto mt-10"
-          onSubmit={handleSubmit()}
+          onSubmit={handleSubmit(onFormSubmit)}
         >
           <div className="mb-4">
             <label className="floating-label">
@@ -59,7 +84,7 @@ export default function Register() {
                 type="text"
                 placeholder="full name"
                 className="input input-lg w-full"
-                id="full name"
+                id="fullname"
                 {...register("fullname", {
                   validate: (value) => validatefullname(value),
                 })}
@@ -116,12 +141,21 @@ export default function Register() {
               {errors.password.message}
             </span>
           )}
-          <button className=" mt-4 btn btn-secondary w-full" type="submit">
-            Continue
+          <button
+            className=" mt-4 btn btn-secondary w-full"
+            type="submit"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Registering..." : "Continue"}
           </button>
         </form>
       </div>
-      <div className="w-[90vw] md:w-[500px] border rounded-md border-[#A1A1A1]  h-[80px] flex items-center justify-center mt-6 gap-2"><p>Already have an account?</p> <Link to="/auth/login" className="text-[]">Log in</Link></div>
+      <div className="w-[90vw] md:w-[500px] border rounded-md border-[#A1A1A1]  h-[80px] flex items-center justify-center mt-6 gap-2">
+        <p>Already have an account?</p>{" "}
+        <Link to="/auth/login" className="text-[]">
+          Log in
+        </Link>
+      </div>
     </>
   );
 }
