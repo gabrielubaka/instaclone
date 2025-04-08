@@ -38,7 +38,7 @@ export const registerUser = async (req, res, next) => {
     user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000;
     await user.save();
     //specify the verifyAccountlink
-    const verifyAccountLink = `${process.env.CLIENT_URL}/account/verify-account/${user._id}/${user.verificationToken}`;
+    const verifyAccountLink = `${process.env.CLIENT_URL}/verify-email/${user._id}/${user.verificationToken}`;
     //send email to user
     await sendMail({
       fullname: user.fullname,
@@ -56,7 +56,8 @@ export const registerUser = async (req, res, next) => {
     //send a response to a client
     res.status(201).json({
       success: true,
-      message: "Account created successfully",
+      message:
+        "Account created successfully, please check your mail in order to verify your account",
       accessToken,
     });
   } catch (error) {
@@ -107,14 +108,14 @@ export const authenticateUser = async (req, res, next) => {
 
 export const resendEmailVerificationLink = async (req, res, next) => {
   const { id: userId } = req.user;
-  console.log("user", req.url);
+  console.log("ll", userId);
   try {
-    const user = User.findById(userId);
+    const user = await User.findById(userId);
     const verifyAccountToken = crypto.randomBytes(20).toString("hex");
     user.verificationToken = verifyAccountToken;
     user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000;
     await user.save();
-    const verifyAccountLink = `${process.env.CLIENT_URL}/account/verify-account/${user._id}/${user.verificationToken}`;
+    const verifyAccountLink = `${process.env.CLIENT_URL}/verify-email/${user._id}/${user.verificationToken}`;
     //send email to user
     await sendMail({
       fullname: user.fullname,
@@ -131,7 +132,7 @@ export const resendEmailVerificationLink = async (req, res, next) => {
       .status(200)
       .json({ success: true, message: "Email verification link sent" });
   } catch (error) {
-    next();
+    next(error);
   }
 };
 
@@ -147,7 +148,7 @@ export const verifyEmailAccount = async (req, res, next) => {
     const user = await User.findOne({
       _id: userId,
       verificationToken: verificationToken,
-    }).select("+verificationToken +vewrificationExpires");
+    }).select("+verificationToken +verificationTokenExpires");
     if (!user) {
       return next(createHttpError(404, " Invalid User id or reset token"));
     }
@@ -177,8 +178,6 @@ export const verifyEmailAccount = async (req, res, next) => {
 };
 
 export const sendForgotPaswordMail = async (req, res, next) => {
-  console.log(req.originalUrl);
-
   const { email } = req.body;
   try {
     if (!email) {
@@ -190,10 +189,10 @@ export const sendForgotPaswordMail = async (req, res, next) => {
     }
 
     const resetToken = crypto.randomBytes(20).toString("hex");
-    user.verificationToken = resetToken;
-    user.verificationTokenExpires = Date.now() + 30 * 60 * 1000;
+    user.passwordResetToken = resetToken;
+    user.passwordResetTokenExpires = Date.now() + 30 * 60 * 1000;
     await user.save();
-    const resetPasswordLink = `${process.env.CLIENT_URL}/account/reset-account/${user._id}/${user.passwordResetToken}`;
+    const resetPasswordLink = `${process.env.CLIENT_URL}/auth/reset-account/${user._id}/${user.passwordResetToken}`;
     //send email to user
     await sendMail({
       fullname: user.fullname,
@@ -245,10 +244,10 @@ export const resetPassword = async (req, res, next) => {
       );
     }
     //check newPassword and confirmPassword are same
-    if (newPassword !== confirmPassword){
+    if (newPassword !== confirmPassword) {
       return next(
-        createHttpError(400,"New password amd confirm password do not match")
-      )
+        createHttpError(400, "New password amd confirm password do not match")
+      );
     }
     //proceed to hash password
     const salt = await bcrypt.genSalt(10);
@@ -257,6 +256,8 @@ export const resetPassword = async (req, res, next) => {
     user.passwordResetToken = null;
     user.passwordResetTokenExpires = null;
     await user.save();
-    res.status(200).json({ success: true, message: "Password has been updated"})
-    } catch (error) {}
+    res
+      .status(200)
+      .json({ success: true, message: "Password has been updated" });
+  } catch (error) {}
 };

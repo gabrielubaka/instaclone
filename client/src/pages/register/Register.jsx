@@ -124,7 +124,7 @@ export default function Register() {
                 className="input input-lg w-full"
                 id="password"
                 {...register("password", {
-                  validate: (value) => validatePassword(value),
+                  validate: (value) => validatePassword(value, "Password is required"),
                 })}
               />
             </label>

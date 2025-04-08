@@ -30,7 +30,7 @@ export default function Login() {
 
       if (res.status === 200) {
         toast.success(res.data.message);
-        setAccessToken(res.data.AccessToken);
+        setAccessToken(res.data.accessToken);
         navigate("/");
       }
     } catch (error) {
@@ -82,7 +82,7 @@ export default function Login() {
                 className="input input-lg w-full"
                 id="password"
                 {...register("password", {
-                  validate: (value) => validatePassword(value),
+                  validate: (value) => validatePassword(value,"Password is required"),
                 })}
               />
             </label>
@@ -103,7 +103,7 @@ export default function Login() {
             {isSubmitting ? <DataSpinner /> : "log in"}
           </button>
           <div className="text-center mt-4">
-            <Link to="/auth/forgottenpassword" className="text-center mt-4">
+            <Link to="/auth/forgotten-password" className="text-center mt-4">
               Forgot Password?
             </Link>
           </div>

@@ -15,7 +15,7 @@ export const authenticateUser = async (token) => {
   });
 };
 export const resendEmailVerifyLink = async (token) => {
-  return await axiosInstance.post("/auth/resend-verification-email", {
+  return await axiosInstance.post("/auth/resend-verification-email",{}, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -23,7 +23,7 @@ export const resendEmailVerifyLink = async (token) => {
 };
 export const verifyEmailAccount = async (userId, verificationToken, token) => {
   return await axiosInstance.patch(
-    `/auth/verify-account/${userId}/${verificationToken}`,
+    `/auth/verify-account/${userId}/${verificationToken}`,{},
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -31,12 +31,14 @@ export const verifyEmailAccount = async (userId, verificationToken, token) => {
     }
   );
 };
+
 export const sendForgotPasswordMail = async (formData) => {
   return await axiosInstance.post("/auth/sendforgot-password-mail", formData);
 };
+
 export const resetPassword = async (userId, passwordToken, formData) => {
   return axiosInstance.patch(
-    `auth/reset-password/${userId}/${passwordToken}`,
+    `/auth/reset-password/${userId}/${passwordToken}`,
     formData
   );
 };
