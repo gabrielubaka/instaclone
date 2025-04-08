@@ -19,6 +19,10 @@ app.use(json({ limit: "25mb" })); //parses requests to client side in json body 
 app.use(express.urlencoded({ extended: true }));
 app.disable("x-powered-by"); //disable tech
 
+app.get("/",(req,res) =>{
+  res.send("Hello Instashots S erver")
+});
+
 //api
 app.use("/api/auth", userRoutes);
 
